@@ -14,7 +14,7 @@ This file is Copyright (c) ...
 """
 from __future__ import annotations
 from typing import Any, Optional
-
+import json
 import networkx as nx  # Used for visualizing graphs (by convention, referred to as "nx")
 
 
@@ -214,3 +214,76 @@ class Graph:
                         product_pair = tuple(sorted((product, co_purchased_product)))
                         co_purchase_counts[product_pair] = co_purchase_counts.get(product_pair, 0) + 1
         return co_purchase_counts
+
+
+def load_user_product_graph(reviews_file: str, products_file: str) -> Graph:
+    """Return a user-product graph based on the given datasets.
+
+    The user-product graph stores information from the reviews_file as follows:
+    - Create one vertex for each user and one vertex for every unique product reviewed.
+    - Edges represent a review between a user and a product.
+
+    The vertices of the 'user' kind should have the user ID as its item.
+    The vertices of the 'product' kind should have the product title as its item.
+
+    Note: Each edge only represents the existence of a review. Review scores are ignored.
+
+    Preconditions:
+        - reviews_file is the path to a JSON file corresponding to the review data.
+        - products_file is the path to a JSON file corresponding to the product data.
+
+    >>> g = load_user_product_graph('All_Beauty.jsonl', 'meta_All_Beauty.jsonl')
+    >>> len(g.get_all_vertices(kind='product'))
+    108924
+    >>> len(g.get_all_vertices(kind='user'))
+    578813
+    >>> user1_reviews = g.get_neighbours("AGKHLEW2SOWHNMFQIJGBECAF7INQ")
+    >>> len(user1_reviews)
+    2
+    """
+    graph = Graph()
+
+    product_id_to_title = {}
+    with open(products_file, 'r', encoding='utf-8') as file:
+        for line in file:
+            product_data = json.loads(line.strip())
+            product_id_to_title[product_data['parent_asin']] = product_data['title']
+
+    with open(reviews_file, 'r', encoding='utf-8') as file:
+        for line in file:
+            review_data = json.loads(line.strip())
+            user_id = review_data['user_id']
+            product_id = review_data['asin']
+
+            if product_id in product_id_to_title:
+                product_title = product_id_to_title[product_id]
+
+                graph.add_user(user_id)
+                graph.add_product(product_title)
+
+                graph.add_edge(user_id, product_title)
+
+    return graph
+
+
+if __name__ == '__main__':
+    # You can uncomment the following lines for code checking/debugging purposes.
+    # However, we recommend commenting out these lines when working with the large
+    # datasets, as checking representation invariants and preconditions greatly
+    # increases the running time of the functions/methods.
+    # import python_ta.contracts
+    # python_ta.contracts.check_all_contracts()
+
+    import doctest
+
+    doctest.testmod(verbose=True)
+
+    import python_ta
+
+    python_ta.check_all(config={
+        'max-line-length': 100,
+        'disable': ['E1136'],
+        'extra-imports': ['csv', 'networkx'],
+        'allowed-io': ['load_review_graph'],
+        'max-nested-blocks': 4
+    })
