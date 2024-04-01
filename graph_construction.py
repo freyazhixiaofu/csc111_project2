@@ -13,30 +13,34 @@ This file is provided solely ...
 This file is Copyright (c) ...
 """
 from __future__ import annotations
-from typing import Any
+from typing import Any, Optional
 
 import networkx as nx  # Used for visualizing graphs (by convention, referred to as "nx")
 
 
-class _Vertex:
-    """A vertex in a book review graph, used to represent a user or a book.
-
-    Each vertex item is either a user id or book title. Both are represented as strings,
-    even though we've kept the type annotation as Any to be consistent with lecture.
+class _Vertex:  # self written
+    """A Vertex is either a User or a Product.
+    If the Vertex is a Product, then it will have a "date" attrbute that
 
     Instance Attributes:
-        - item: The data stored in this vertex, representing a user or book.
-        - kind: The type of this vertex: 'user' or 'book'.
+        - name: The data stored in this vertex, representing a user or book.
+        - kind: The type of this vertex: 'user' or 'product'.
         - neighbours: The vertices that are adjacent to this vertex.
+        - all_time_stam: a list recording the time stamp upon each purchase of the product. This is only an attribute
+        for products.
+        - review: a list recordn the review upon each review of the product. This is only an attribute for products.
 
     Representation Invariants:
         - self not in self.neighbours
         - all(self in u.neighbours for u in self.neighbours)
-        - self.kind in {'user', 'book'}
+        - self.kind in {'user', 'product'}
+
     """
     item: Any
     kind: str
     neighbours: set[_Vertex]
+    all_time_stamp: Optional[list[int]]
+    all_review: Optional[list[float]]
 
     def __init__(self, item: Any, kind: str) -> None:
         """Initialize a new vertex with the given item and kind.
@@ -44,14 +48,20 @@ class _Vertex:
         This vertex is initialized with no neighbours.
 
         Preconditions:
-            - kind in {'user', 'book'}
+            - kind in {'user', 'product'}
         """
         self.item = item
         self.kind = kind
         self.neighbours = set()
+        if kind == 'product':
+            self.all_time_stamp = []
+            self.all_review = []
+        else:
+            self.all_time_stamp = None
+            self.all_review = None
 
     def degree(self) -> int:
-        """Return the degree of this vertex."""
+        """Return the degree of this vertex based on how many neighbours it has."""
         return len(self.neighbours)
 
 
@@ -100,12 +110,28 @@ class Graph:
             raise ValueError
 
     def add_user(self, user_id: str) -> None:
-        """Add a user vertex to the graph."""
-        self.add_vertex(user_id, 'user')
+        """Add a user vertex to the graph.
+
+        Raise ValueError:
+        - If there's an attempt to add a user that already exists as a product.
+        """
+        if user_id in self._vertices:
+            if self._vertices[user_id].kind != 'user':
+                raise ValueError
+        else:
+            self.add_vertex(user_id, 'user')
 
     def add_product(self, product_id: str) -> None:
-        """Add a product vertex to the graph."""
-        self.add_vertex(product_id, 'product')
+        """Add a product vertex to the graph.
+
+        Raise ValueError:
+        - If there's an attempt to add a product that already exists as a user.
+        """
+        if product_id in self._vertices:
+            if self._vertices[product_id].kind != 'product':
+                raise ValueError
+        else:
+            self.add_vertex(product_id, 'product')
 
     def add_purchase(self, user_id: str, product_id: str) -> None:
         """Add an edge to represent a purchase between a user and a product.
@@ -188,32 +214,3 @@ class Graph:
                         product_pair = tuple(sorted((product, co_purchased_product)))
                         co_purchase_counts[product_pair] = co_purchase_counts.get(product_pair, 0) + 1
         return co_purchase_counts
-
-    def recommend_products(self, user_id: str, limit: int) -> list[str]:
-        """Return a list of up to <limit> recommended products based on co-purchase data.
-
-        The return value is a list of the product IDs recommended, sorted in
-        *descending order* of co-purchase count.
-
-        Preconditions:
-            - user_id in self._vertices
-            - self._vertices[user_id].kind == 'user'
-            - limit >= 1
-        """
-        if user_id not in self._vertices or self._vertices[user_id].kind != 'user':
-            raise ValueError("The user_id does not exist or is not a user.")
-
-        co_purchase_counts = self.create_co_purchase_dict()
-
-        purchased_by_user = self.get_neighbours(user_id)
-        potential_recommendations = set(self.get_all_vertices('product')) - purchased_by_user
-
-        recommendations = {product: 0 for product in potential_recommendations}
-        for (product1, product2), count in co_purchase_counts.items():
-            if product1 in potential_recommendations:
-                recommendations[product1] += count
-            elif product2 in potential_recommendations:
-                recommendations[product2] += count
-
-        sorted_recommendations = sorted(recommendations.items(), key=lambda x: (-x[1], x[0]))
-        return [product_id for product_id, _ in sorted_recommendations[:limit]]
