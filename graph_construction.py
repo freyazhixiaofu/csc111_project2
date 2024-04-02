@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import Any, Optional
 import json
 import networkx as nx  # Used for visualizing graphs (by convention, referred to as "nx")
-
+from read_data import load_clean_product_data, load_clean_review_data
 
 class _Vertex:  # self written
     """A Vertex is either a User or a Product.
@@ -121,17 +121,19 @@ class Graph:
         else:
             self.add_vertex(user_id, 'user')
 
-    def add_product(self, product_id: str) -> None:
+    def add_product(self, product_title: str, time: int, rate: float) -> None:
         """Add a product vertex to the graph.
 
         Raise ValueError:
         - If there's an attempt to add a product that already exists as a user.
         """
-        if product_id in self._vertices:
-            if self._vertices[product_id].kind != 'product':
+        if product_title in self._vertices:
+            if self._vertices[product_title].kind != 'product':
                 raise ValueError
         else:
-            self.add_vertex(product_id, 'product')
+            self.add_vertex(product_title, 'product')
+            self._vertices[product_title].all_time_stamp.append(time)
+            self._vertices[product_title].all_review.append(rate)
 
     def add_purchase(self, user_id: str, product_id: str) -> None:
         """Add an edge to represent a purchase between a user and a product.
@@ -215,13 +217,21 @@ class Graph:
                         co_purchase_counts[product_pair] = co_purchase_counts.get(product_pair, 0) + 1
         return co_purchase_counts
 
+    def get_vertex(self, item: str) -> _Vertex:
+        """Returns the vertex with the corresponding name of the vertex in the graph.
+        Preconditions:
 
-def load_user_product_graph(reviews_file: str, products_file: str) -> Graph:
+        item in self._Vertices"""
+
+        return self._vertices[item]
+
+
+def load_user_product_graph(review_data: list[dict[str, str]], product_data: list[dict[str, str]]) -> Graph:
     """Return a user-product graph based on the given datasets.
 
     The user-product graph stores information from the reviews_file as follows:
     - Create one vertex for each user and one vertex for every unique product reviewed.
-    - Edges represent a review between a user and a product.
+    - Edges represents the existence of a review between a user and a product.
 
     The vertices of the 'user' kind should have the user ID as its item.
     The vertices of the 'product' kind should have the product title as its item.
@@ -231,8 +241,9 @@ def load_user_product_graph(reviews_file: str, products_file: str) -> Graph:
     Preconditions:
         - reviews_file is the path to a JSON file corresponding to the review data.
         - products_file is the path to a JSON file corresponding to the product data.
-
-    >>> g = load_user_product_graph('All_Beauty.jsonl', 'meta_All_Beauty.jsonl')
+    >>> review_data1 = load_clean_review_data("All_Beauty.jsonl")
+    >>> product_data1 = load_clean_product_data("meta_All_Beauty.jsonl")
+    >>> g = load_user_product_graph(review_data1, product_data1)
     >>> len(g.get_all_vertices(kind='product'))
     108924
     >>> len(g.get_all_vertices(kind='user'))
@@ -244,26 +255,71 @@ def load_user_product_graph(reviews_file: str, products_file: str) -> Graph:
     graph = Graph()
 
     product_id_to_title = {}
-    with open(products_file, 'r', encoding='utf-8') as file:
-        for line in file:
-            product_data = json.loads(line.strip())
-            product_id_to_title[product_data['parent_asin']] = product_data['title']
+    for product_dict in product_data:
+        product_id_to_title[product_dict["parent_asin"]] = product_dict["title"]
+    for review_dict in review_data:
+        user_id = review_dict['user_id']
+        product_id = review_dict['parent_asin']
+        timestamp = int(review_dict['timestamp'])
+        rating = float(review_dict['rating'])
+        if product_id in product_id_to_title:
+            product_title = product_id_to_title[product_id]
 
-    with open(reviews_file, 'r', encoding='utf-8') as file:
-        for line in file:
-            review_data = json.loads(line.strip())
-            user_id = review_data['user_id']
-            product_id = review_data['asin']
+            graph.add_user(user_id)
+            graph.add_product(product_title, timestamp, rating)
 
-            if product_id in product_id_to_title:
-                product_title = product_id_to_title[product_id]
-
-                graph.add_user(user_id)
-                graph.add_product(product_title)
-
-                graph.add_edge(user_id, product_title)
+            graph.add_edge(user_id, product_title)
 
     return graph
+
+# def load_user_product_graph(reviews_file: str, products_file: str) -> Graph:
+#     """Return a user-product graph based on the given datasets.
+#
+#     The user-product graph stores information from the reviews_file as follows:
+#     - Create one vertex for each user and one vertex for every unique product reviewed.
+#     - Edges represents the existence of a review between a user and a product.
+#
+#     The vertices of the 'user' kind should have the user ID as its item.
+#     The vertices of the 'product' kind should have the product title as its item.
+#
+#     Note: Each edge only represents the existence of a review. Review scores are ignored.
+#
+#     Preconditions:
+#         - reviews_file is the path to a JSON file corresponding to the review data.
+#         - products_file is the path to a JSON file corresponding to the product data.
+#
+#     >>> g = load_user_product_graph('All_Beauty.jsonl', 'meta_All_Beauty.jsonl')
+#     >>> len(g.get_all_vertices(kind='product'))
+#     108924
+#     >>> len(g.get_all_vertices(kind='user'))
+#     578813
+#     >>> user1_reviews = g.get_neighbours("AGKHLEW2SOWHNMFQIJGBECAF7INQ")
+#     >>> len(user1_reviews)
+#     2
+#     """
+#     graph = Graph()
+#
+#     product_id_to_title = {}
+#     with open(products_file, 'r', encoding='utf-8') as file:
+#         for line in file:
+#             product_data = json.loads(line.strip())
+#             product_id_to_title[product_data['parent_asin']] = product_data['title']
+#
+#     with open(reviews_file, 'r', encoding='utf-8') as file:
+#         for line in file:
+#             review_data = json.loads(line.strip())
+#             user_id = review_data['user_id']
+#             product_id = review_data['asin']
+#
+#             if product_id in product_id_to_title:
+#                 product_title = product_id_to_title[product_id]
+#
+#                 graph.add_user(user_id)
+#                 graph.add_product(product_title)
+#
+#                 graph.add_edge(user_id, product_title)
+#
+#     return graph
 
 
 if __name__ == '__main__':
