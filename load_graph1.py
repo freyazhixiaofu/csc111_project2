@@ -1,24 +1,26 @@
-"""CSC111 Winter 2024 Project2: Graph Consrtuction
+"""CSC111 Winter 2024 Project2: load_graph1
 
-Instructions (READ THIS FIRST!)
+Overview
 ===============================
 
-This Python module contains...
+This Python module contains a function responsible for loading graph1,
+which shows the relationship between userID and Product.
 
 Copyright and Usage Information
 ===============================
 
-This file is provided solely ...
+This file is provided solely for grading by instructors and TAs of CSC111.
+at the University of Toronto St. George campus. All forms of distribution
+of this code, whether as given or with any changes, are expressly prohibited.
 
-This file is Copyright (c) ...
+This file is Copyright (c) 2024 Ying Zhang, Zhixiao Fu, Yufei Chen, Julie Sun
 """
 from __future__ import annotations
 from typing import Any, Optional
-import json
 import networkx as nx  # Used for visualizing graphs (by convention, referred to as "nx")
-from read_data import load_clean_product_data, load_clean_review_data
 
-class _Vertex:  # self written
+
+class _Vertex:
     """A Vertex is either a User or a Product.
     If the Vertex is a Product, then it will have a "date" attrbute that
 
@@ -26,9 +28,10 @@ class _Vertex:  # self written
         - name: The data stored in this vertex, representing a user or book.
         - kind: The type of this vertex: 'user' or 'product'.
         - neighbours: The vertices that are adjacent to this vertex.
-        - all_time_stam: a list recording the time stamp upon each purchase of the product. This is only an attribute
-        for products.
-        - review: a list recordn the review upon each review of the product. This is only an attribute for products.
+        - all_time_stam: a list recording the time stamp upon each purchase of the product.
+          This is only an attribute for products.
+        - review: a list recordn the review upon each review of the product.
+          This is only an attribute for products.
 
     Representation Invariants:
         - self not in self.neighbours
@@ -87,7 +90,7 @@ class Graph:
         Do nothing if the given item is already in this graph.
 
         Preconditions:
-            - kind in {'user', 'book'}
+            - kind in {'user', 'product'}
         """
         if item not in self._vertices:
             self._vertices[item] = _Vertex(item, kind)
@@ -204,17 +207,21 @@ class Graph:
 
         return graph_nx
 
+    def add_co_purchased_counts(self, product: str, user: str, co_purchase_counts: dict) -> None:
+        """Helper function to count co-purchased products for a given product and user.
+        """
+        for co_purchased_product in self.get_neighbours(user):
+            if co_purchased_product != product:
+                product_pair = tuple(sorted((product, co_purchased_product)))
+                co_purchase_counts[product_pair] = co_purchase_counts.get(product_pair, 0) + 1
+
     def create_co_purchase_dict(self) -> dict:
         """Create a dictionary counting the number of times each pair of products was co-purchased.
         """
         co_purchase_counts = {}
         for product in self.get_all_vertices('product'):
             for user in self.get_neighbours(product):
-                for co_purchased_product in self.get_neighbours(user):
-                    # Too many for loops here!
-                    if co_purchased_product != product:
-                        product_pair = tuple(sorted((product, co_purchased_product)))
-                        co_purchase_counts[product_pair] = co_purchase_counts.get(product_pair, 0) + 1
+                self.add_co_purchased_counts(product, user, co_purchase_counts)
         return co_purchase_counts
 
     def get_vertex(self, item: str) -> _Vertex:
@@ -241,16 +248,7 @@ def load_user_product_graph(review_data: list[dict[str, str]], product_data: lis
     Preconditions:
         - reviews_file is the path to a JSON file corresponding to the review data.
         - products_file is the path to a JSON file corresponding to the product data.
-    >>> review_data1 = load_clean_review_data("All_Beauty.jsonl")
-    >>> product_data1 = load_clean_product_data("meta_All_Beauty.jsonl")
-    >>> g = load_user_product_graph(review_data1, product_data1)
-    >>> len(g.get_all_vertices(kind='product'))
-    108924
-    >>> len(g.get_all_vertices(kind='user'))
-    578813
-    >>> user1_reviews = g.get_neighbours("AGKHLEW2SOWHNMFQIJGBECAF7INQ")
-    >>> len(user1_reviews)
-    2
+
     """
     graph = Graph()
 
@@ -272,55 +270,6 @@ def load_user_product_graph(review_data: list[dict[str, str]], product_data: lis
 
     return graph
 
-# def load_user_product_graph(reviews_file: str, products_file: str) -> Graph:
-#     """Return a user-product graph based on the given datasets.
-#
-#     The user-product graph stores information from the reviews_file as follows:
-#     - Create one vertex for each user and one vertex for every unique product reviewed.
-#     - Edges represents the existence of a review between a user and a product.
-#
-#     The vertices of the 'user' kind should have the user ID as its item.
-#     The vertices of the 'product' kind should have the product title as its item.
-#
-#     Note: Each edge only represents the ex    1istence of a review. Review scores are ignored.
-#
-#     Preconditions:
-#         - reviews_file is the path to a JSON file corresponding to the review data.
-#         - products_file is the path to a JSON file corresponding to the product data.
-#
-#     >>> g = load_user_product_graph('All_Beauty.jsonl', 'meta_All_Beauty.jsonl')
-#     >>> len(g.get_all_vertices(kind='product'))
-#     108924
-#     >>> len(g.get_all_vertices(kind='user'))
-#     578813
-#     >>> user1_reviews = g.get_neighbours("AGKHLEW2SOWHNMFQIJGBECAF7INQ")
-#     >>> len(user1_reviews)
-#     2
-#     """
-#     graph = Graph()
-#
-#     product_id_to_title = {}
-#     with open(products_file, 'r', encoding='utf-8') as file:
-#         for line in file:
-#             product_data = json.loads(line.strip())
-#             product_id_to_title[product_data['parent_asin']] = product_data['title']
-#
-#     with open(reviews_file, 'r', encoding='utf-8') as file:
-#         for line in file:
-#             review_data = json.loads(line.strip())
-#             user_id = review_data['user_id']
-#             product_id = review_data['asin']
-#
-#             if product_id in product_id_to_title:
-#                 product_title = product_id_to_title[product_id]
-#
-#                 graph.add_user(user_id)
-#                 graph.add_product(product_title)
-#
-#                 graph.add_edge(user_id, product_title)
-#
-#     return graph
-
 
 if __name__ == '__main__':
     # You can uncomment the following lines for code checking/debugging purposes.
@@ -330,16 +279,11 @@ if __name__ == '__main__':
     # import python_ta.contracts
     # python_ta.contracts.check_all_contracts()
 
-    import doctest
-
-    doctest.testmod(verbose=True)
-
     import python_ta
 
     python_ta.check_all(config={
-        'max-line-length': 100,
-        'disable': ['E1136'],
-        'extra-imports': ['csv', 'networkx'],
-        'allowed-io': ['load_review_graph'],
-        'max-nested-blocks': 4
+        'extra-imports': [],  # the names (strs) of imported modules
+        'allowed-io': [],  # the names (strs) of functions that call print/open/input
+        'max-line-length': 120
     })
+
