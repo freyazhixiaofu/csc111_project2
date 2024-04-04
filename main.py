@@ -7,20 +7,20 @@ from read_data import *
 from graph_construction import load_user_product_graph
 from load_graph2 import get_all_pairs, counting_pairs, load_graph2
 from recommend_byg2 import recommend
-import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import networkx as nx
 
-def visualize_plotly_graph(G_nx: nx.Graph, title: str, node_color: str, edge_color: str, node_size: int):
+
+def visualize_plotly_graph(g_nx: nx.Graph, title: str, node_color: str, edge_color: str, node_size: int):
     """
     //
     """
-    pos = nx.spring_layout(G_nx, seed=42)
+    pos = nx.spring_layout(g_nx, seed=42)
 
     # Set up edge trace
     edge_x = []
     edge_y = []
-    for edge in G_nx.edges():
+    for edge in g_nx.edges():
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
         edge_x.extend([x0, x1, None])
@@ -35,7 +35,7 @@ def visualize_plotly_graph(G_nx: nx.Graph, title: str, node_color: str, edge_col
     # Set up node trace
     node_x = []
     node_y = []
-    for node in G_nx.nodes():
+    for node in g_nx.nodes():
         x, y = pos[node]
         node_x.append(x)
         node_y.append(y)
@@ -45,22 +45,21 @@ def visualize_plotly_graph(G_nx: nx.Graph, title: str, node_color: str, edge_col
         mode='markers',
         hoverinfo='text',
         marker=dict(
-            showscale=False,
+            showscale=True,
             colorscale='YlGnBu',
             size=node_size,
             color=node_color,
             opacity=0.8,
             line=dict(width=2)))
 
-    # Add node labels with differentiation between product and user nodes
+    # Add node labels
     node_text = []
-    for node in G_nx.nodes(data=True):  # Assuming you have node attributes to distinguish between users and products
+    for node in g_nx.nodes(data=True):
         if node[1].get('kind') != 'product':
             label = 'User ID: {}'.format(node[0])
-        else:  # Assuming any node not marked as 'product' is a user
+        else:
             label = 'Product: {}'.format(node[0])
         node_text.append(label)
-
     node_trace.text = node_text
 
     # Create figure
@@ -83,9 +82,25 @@ def main():
 
 
 if __name__ == "__main__":
-    review_data = load_clean_review_data("All_Beauty.jsonl")
-    product_data = load_clean_product_data("meta_All_Beauty.jsonl")
-    g1 = load_user_product_graph(review_data, product_data)
+    the_product = input("What product would you like a recommendation for?")
+    product_data1 = load_clean_product_data("meta_All_Beauty.jsonl")
+    product_data2 = load_clean_product_data("meta_Gift_Cards.jsonl")
+    product_data = product_data1 + product_data2
+
+    product_category = ""
+    for product in product_data:
+        if product["title"] == the_product:
+            product_category = product["main_category"]
+    while product_category == "":
+        product = input("What product would you like a recommendation for?")
+        product_data1 = load_clean_product_data("meta_All_Beauty.jsonl")
+        product_data2 = load_clean_product_data("meta_Gift_Cards.jsonl")
+        product_data = product_data1 + product_data2
+
+    review_data = load_clean_review_data(f"{product_category.replace(" ", "_")}.jsonl")
+    product_datas = {"All Beauty": product_data1, "Gift Cards": product_data2}
+
+    g1 = load_user_product_graph(review_data, product_datas[product_category])
     pairs_lst = get_all_pairs(g1)
     pairs_dict = counting_pairs(pairs_lst)
     g2 = load_graph2(g1, pairs_dict)
@@ -100,11 +115,5 @@ if __name__ == "__main__":
     visualize_plotly_graph(G_product_product, 'Product-Product Graph', node_color='lightseagreen',
                            edge_color='rgba(150,150,150,0.4)', node_size=10)
 
-    results = recommend(g2, 'Nurbo Handmade Love Owl wings Multilayer Knit Leather Rope Chain Bracelet', 10)
-    for result in results:
-        print(result)
-    ##################################
-    # the following are test cases( the product newly bought)
-    # '16 oz, Pink - Bargz Perfume - Pink Friday By Nikki Minaj Body Oil For Women Scented Fragrance', 10)
-    # SALUX Nylon Japanese Beauty Skin Bath Wash cloth Towel Yellow'
-    # Nurbo Handmade Love Owl wings Multilayer Knit Leather Rope Chain Bracelet
+    # results = recommend(g2, 'Plastic Ointment Jars With Lids 1 Oz 10/pkg', 10)
+    # print(results)
