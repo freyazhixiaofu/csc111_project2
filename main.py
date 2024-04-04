@@ -78,7 +78,7 @@ def generate_node_traces(g_nx: nx.Graph, pos: dict) -> go.Scatter:
     return node_trace
 
 
-def visualize_weighted_graph(g_nx: nx.Graph, title: str) -> None:
+def visualize_graph(g_nx: nx.Graph, title: str) -> None:
     """
     Visualizes a weighted graph using Plotly, specifically tailored for the
     network graph built from the networkx Graph class. This function utilizes
@@ -132,9 +132,9 @@ if __name__ == "__main__":
     G_product_product = g2.to_networkx()
 
     # For interactive visualization using Plotly
-    visualize_weighted_graph(G_user_product, 'User-Product Graph')
+    visualize_graph(G_user_product, 'User-Product Graph')
 
-    visualize_weighted_graph(G_product_product, 'Product-Product Graph')
+    visualize_graph(G_product_product, 'Product-Product Graph')
 
     # results = recommend(g2, 'Plastic Ointment Jars With Lids 1 Oz 10/pkg', 10)
     # print(results)
