@@ -19,7 +19,7 @@ This file is Copyright (c) 2024 Ying Zhang, Zhixiao Fu, Yufei Chen, Julie Sun
 import plotly.graph_objects as go
 import networkx as nx
 import read_data
-from graph_construction import load_user_product_graph
+from load_graph1 import load_user_product_graph
 from load_graph2 import get_all_pairs, counting_pairs, load_graph2
 from recommend_byg2 import recommend
 
