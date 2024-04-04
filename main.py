@@ -11,8 +11,7 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import networkx as nx
 
-
-def visualize_plotly_graph(G_nx, title: str, node_color: str, edge_color: str, node_size: int):
+def visualize_plotly_graph(G_nx: nx.Graph, title: str, node_color: str, edge_color: str, node_size: int):
     """
     //
     """
@@ -46,15 +45,22 @@ def visualize_plotly_graph(G_nx, title: str, node_color: str, edge_color: str, n
         mode='markers',
         hoverinfo='text',
         marker=dict(
-            showscale=True,
+            showscale=False,
             colorscale='YlGnBu',
             size=node_size,
             color=node_color,
             opacity=0.8,
             line=dict(width=2)))
 
-    # Add node labels
-    node_text = ['Product: {}'.format(node) for node in G_nx.nodes()]
+    # Add node labels with differentiation between product and user nodes
+    node_text = []
+    for node in G_nx.nodes(data=True):  # Assuming you have node attributes to distinguish between users and products
+        if node[1].get('kind') != 'product':
+            label = 'User ID: {}'.format(node[0])
+        else:  # Assuming any node not marked as 'product' is a user
+            label = 'Product: {}'.format(node[0])
+        node_text.append(label)
+
     node_trace.text = node_text
 
     # Create figure
