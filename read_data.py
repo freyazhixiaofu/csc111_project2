@@ -1,5 +1,19 @@
-"""
-i wrote this copyright and stuff csc111
+"""CSC111 Winter 2024 Project2: read_data
+
+Overview
+===============================
+
+This Python module contains functions responsible for loading JSONL datasets
+into usable lists of dictionaries for the rest of the project.
+
+Copyright and Usage Information
+===============================
+
+This file is provided solely for grading by instructors and TAs of CSC111.
+at the University of Toronto St. George campus. All forms of distribution
+of this code, whether as given or with any changes, are expressly prohibited.
+
+This file is Copyright (c) 2024 Ying Zhang, Zhixiao Fu, Yufei Chen, Julie Sun
 """
 import json
 
