@@ -20,7 +20,7 @@ This file is Copyright (c) 2024 Ying Zhang, Zhixiao Fu, Yufei Chen, Julie Sun
 from __future__ import annotations
 from typing import Any, Union
 import networkx as nx
-from graph_construction import Graph
+from load_graph1 import Graph
 
 
 class _WeightedVertex:
