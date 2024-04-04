@@ -16,7 +16,5 @@ if __name__ == "__main__":
     pairs_dict = counting_pairs(pairs_lst)
     g2 = load_graph2(g1, pairs_dict)
 
-    results = recommend(g2, "Foot Peel Mask Exfoliating (3 pairs) - Foot Peeling Mask (2 pairs) & Moisturizing Foot\
-     Mask (1 pairs), Make Your Feet Baby Soft, Peel Away Calluses and Dead Skin for Women & Men", 10)
-
+    results = recommend(g2, 'Plastic Ointment Jars With Lids 1 Oz 10/pkg', 10)
     print(results)

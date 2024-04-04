@@ -282,7 +282,7 @@ def load_user_product_graph(review_data: list[dict[str, str]], product_data: lis
 #     The vertices of the 'user' kind should have the user ID as its item.
 #     The vertices of the 'product' kind should have the product title as its item.
 #
-#     Note: Each edge only represents the existence of a review. Review scores are ignored.
+#     Note: Each edge only represents the ex    1istence of a review. Review scores are ignored.
 #
 #     Preconditions:
 #         - reviews_file is the path to a JSON file corresponding to the review data.

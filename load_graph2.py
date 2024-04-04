@@ -39,7 +39,7 @@ class WeightedGraph:
       If an edge is added between two products, that means there is a connection between the two, the weight of the edge
       between any two procuts represents how strong their connection is. """
 
-    _vertices: dict[Any, _WeightedVertex]
+    _vertices: dict[str, _WeightedVertex]  # changed Any to str
 
     def __init__(self) -> None:
         """Initialize an empty graph with no vertices or edges."""
@@ -75,6 +75,21 @@ class WeightedGraph:
         """return the dictionary of all products in weighted graph"""
         return self._vertices
 
+    def get_weight(self, v_p1: _WeightedVertex, v_p2: _WeightedVertex) -> float:
+        """given the names of the two products, return the weight on their edge."""
+        return v_p1.neighbours[v_p2]
+
+    def adjacent(self, p1: str, p2: str):
+        """If two products are adjacent in the graph"""
+        if not (p1 in self._vertices and p2 in self._vertices):
+            raise ValueError
+        v1 = self._vertices[p1]
+        return any(v2.name == p2 for v2 in v1.neighbours)
+
+    def get_all_vertices(self) -> set[str]:
+        """A set of all the product names in the graph"""
+        return {v.name for v in self._vertices.values()}
+
 
 def counting_pairs(lst) -> dict[tuple: int]:
     """Counts the number of occurrences of each pair of products, which represents double of the number of users that
@@ -109,14 +124,21 @@ def get_all_pairs(g: Graph) -> list[tuple]:
     lst = []
     products = g.get_all_vertices('product')
     for p in products:
-        for user in g.get_vertex(p).neighbours:
-            assert g.adjacent(user.item, p)
-            for also_bought in user.neighbours:
-                pair_list = sorted([p, also_bought.item])
-                assert g.adjacent(user.item, also_bought.item)
-                lst.append((pair_list[0], pair_list[1]))
+        connected_v = get_double_nb(p, g)
+        for product in connected_v:
+            pair_list = sorted([product, p])
+            lst.append((pair_list[0], pair_list[1]))
     return lst
 
+
+def get_double_nb (v: str, g: Graph) -> list[str]:
+    """Get neighbour's neighbours that are not itself"""
+    s = []
+    for nb in g.get_vertex(v).neighbours:
+        for nb2 in nb.neighbours:
+            if nb2.item != v:
+                s.append(nb2.item)
+    return s
 
 def calculate_weight(rating1: float, rating2: float, time1: float, time2: float, occurrences: int) -> float:
     """Calculate how strong the connection is between any two products when given their average rating, average
@@ -145,21 +167,20 @@ def load_graph2(g1: Graph, d: dict[tuple: int]) -> WeightedGraph:
     We will divide the number of occurrences of each pair by two to get the real number of users who have purchased
     both products in the past.
 
-
-    >>> g = load_user_product_graph('All_Beauty.jsonl', 'meta_All_Beauty.jsonl')
-    >>> g2 = load_graph2(g, )
-    >>> len(g.get_all_vertices(kind='product'))
-    108924
-    >>> len(g.get_all_vertices(kind='user'))
-    578813
-    >>> user1_reviews = g.get_neighbours("AGKHLEW2SOWHNMFQIJGBECAF7INQ")
-    >>> len(user1_reviews)
-    2
+    # >>> g = load_user_product_graph('All_Beauty.jsonl', 'meta_All_Beauty.jsonl')
+    # >>> g2 = load_graph2(g, )
+    # >>> len(g.get_all_vertices(kind='product'))
+    # 108924
+    # >>> len(g.get_all_vertices(kind='user'))
+    # 578813
+    # >>> user1_reviews = g.get_neighbours("AGKHLEW2SOWHNMFQIJGBECAF7INQ")
+    # >>> len(user1_reviews)
+    # 2
 
     """
     g2 = WeightedGraph()
     for tup in d:
-        if d[tup] // 2 >= 2:
+        if d[tup] // 2 >= 1:
             v1 = g1.get_vertex(tup[0])
             v2 = g1.get_vertex(tup[1])
             rating1 = sum(v1.all_review) / len(v1.all_review)
@@ -171,4 +192,6 @@ def load_graph2(g1: Graph, d: dict[tuple: int]) -> WeightedGraph:
             g2.add_vertex(tup[0])
             g2.add_vertex(tup[1])
             g2.add_edge(tup[0], tup[1], weight)
+            # if g2.adjacent(tup[0], tup[1]):
+            #     print(f'...{g2.get_all_vertices()}...lol')
     return g2
