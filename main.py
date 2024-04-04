@@ -18,17 +18,16 @@ def visualize_weighted_graph(G_nx: nx.Graph, title: str):
     """
     pos = nx.spring_layout(G_nx, seed=42)  # Position nodes using the spring layout
 
-    # Prepare edge traces with edge weights influencing line width
-    edge_x = []
-    edge_y = []
     edge_trace = []
     for edge in G_nx.edges(data=True):
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
-        weight = edge[2]['weight'] if 'weight' in edge[2] else 1  # Use edge weight if available
+        weight = edge[2]['weight'] if 'weight' in edge[2] else 1
         edge_trace.append(go.Scatter(x=[x0, x1, None], y=[y0, y1, None],
                                      mode='lines',
-                                     line=dict(width=0.5, color='black'),  # Scale weight for visualization
+                                     line=dict(width=0.5, color='black'),
+                                     textposition='top center',
+                                     hovertemplate='%{text}',
                                      hoverinfo='text',
                                      text=[f'Weight: {weight}']))
 
@@ -50,11 +49,15 @@ def visualize_weighted_graph(G_nx: nx.Graph, title: str):
                                         colorbar=dict(title='Degree'),
                                         line_width=0.5))
 
-    # Add node labels based on the node's attribute (assuming 'kind' attribute exists)
-    node_text = [f'{node}' for node in G_nx.nodes()]
+    node_text = []
+    for node in G_nx.nodes(data=True):
+        if node[1].get('kind') != 'product':
+            label = 'User ID: {}'.format(node[0])
+        else:
+            label = 'Product: {}'.format(node[0])
+        node_text.append(label)
     node_trace.text = node_text
 
-    # Create the figure
     fig = go.Figure(data=edge_trace + [node_trace],
                     layout=go.Layout(title=title,
                                      showlegend=False,
