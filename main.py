@@ -11,67 +11,58 @@ import plotly.graph_objects as go
 import networkx as nx
 
 
-def visualize_plotly_graph(g_nx: nx.Graph, title: str, node_color: str, edge_color: str, node_size: int):
+def visualize_weighted_graph(G_nx: nx.Graph, title: str):
     """
-    //
+    Visualize a weighted graph using Plotly, specifically tailored for the
+    network graph built from the WeightedGraph class.
     """
-    pos = nx.spring_layout(g_nx, seed=42)
+    pos = nx.spring_layout(G_nx, seed=42)  # Position nodes using the spring layout
 
-    # Set up edge trace
+    # Prepare edge traces with edge weights influencing line width
     edge_x = []
     edge_y = []
-    for edge in g_nx.edges():
+    edge_trace = []
+    for edge in G_nx.edges(data=True):
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
-        edge_x.extend([x0, x1, None])
-        edge_y.extend([y0, y1, None])
+        weight = edge[2]['weight'] if 'weight' in edge[2] else 1  # Use edge weight if available
+        edge_trace.append(go.Scatter(x=[x0, x1, None], y=[y0, y1, None],
+                                     mode='lines',
+                                     line=dict(width=0.5, color='black'),  # Scale weight for visualization
+                                     hoverinfo='text',
+                                     text=[f'Weight: {weight}']))
 
-    edge_trace = go.Scatter(
-        x=edge_x, y=edge_y,
-        line=dict(width=0.8, color=edge_color),
-        hoverinfo='none',
-        mode='lines')
-
-    # Set up node trace
+    # Prepare node traces
     node_x = []
     node_y = []
-    for node in g_nx.nodes():
+    for node in G_nx.nodes():
         x, y = pos[node]
         node_x.append(x)
         node_y.append(y)
 
-    node_trace = go.Scatter(
-        x=node_x, y=node_y,
-        mode='markers',
-        hoverinfo='text',
-        marker=dict(
-            showscale=True,
-            colorscale='YlGnBu',
-            size=node_size,
-            color=node_color,
-            opacity=0.8,
-            line=dict(width=2)))
+    node_trace = go.Scatter(x=node_x, y=node_y,
+                            mode='markers',
+                            hoverinfo='text',
+                            marker=dict(showscale=True,
+                                        colorscale='Viridis',
+                                        size=10,
+                                        color=list(dict(G_nx.degree).values()),
+                                        colorbar=dict(title='Degree'),
+                                        line_width=0.5))
 
-    # Add node labels
-    node_text = []
-    for node in g_nx.nodes(data=True):
-        if node[1].get('kind') != 'product':
-            label = 'User ID: {}'.format(node[0])
-        else:
-            label = 'Product: {}'.format(node[0])
-        node_text.append(label)
+    # Add node labels based on the node's attribute (assuming 'kind' attribute exists)
+    node_text = [f'{node}' for node in G_nx.nodes()]
     node_trace.text = node_text
 
-    # Create figure
-    fig = go.Figure(data=[edge_trace, node_trace],
-                    layout=go.Layout(
-                        title=title,
-                        showlegend=False,
-                        hovermode='closest',
-                        margin=dict(b=20, l=5, r=5, t=40),
-                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)
-                    ))
+    # Create the figure
+    fig = go.Figure(data=edge_trace + [node_trace],
+                    layout=go.Layout(title=title,
+                                     showlegend=False,
+                                     hovermode='closest',
+                                     margin=dict(b=0, l=0, r=0, t=40),
+                                     xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                                     yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
+
     fig.show()
 
 
@@ -109,11 +100,9 @@ if __name__ == "__main__":
     G_product_product = g2.to_networkx()
 
     # For interactive visualization using Plotly
-    visualize_plotly_graph(G_user_product, 'User-Product Graph', node_color='blue', edge_color='rgba(50,50,50,0.2)',
-                           node_size=10)
+    visualize_weighted_graph(G_user_product, 'User-Product Graph')
 
-    visualize_plotly_graph(G_product_product, 'Product-Product Graph', node_color='lightseagreen',
-                           edge_color='rgba(150,150,150,0.4)', node_size=10)
+    visualize_weighted_graph(G_product_product, 'Product-Product Graph')
 
     # results = recommend(g2, 'Plastic Ointment Jars With Lids 1 Oz 10/pkg', 10)
     # print(results)
