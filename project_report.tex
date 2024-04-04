@@ -112,7 +112,25 @@ The other datasets are user review datasets. They are in this format:
 Each review can be read in as a dictionary. We made use of the rating (rating the user gave the product on a scale of 1-5), parent\_asin (product ID), user\_id, timestamp (when the review was written-- assumed to be a good estimation of when the purchase was made), verified\_purchase (to see if the review was with an actual purchase).
 
 \section*{Computational Overview}
-Using the review data and product data, we construct two types of graphs: a user-product graph and a product-product graph. For both graphs, we use the visualize graph function to create Plotly Scatter objects for edges and nodes. These functions are designed to visually encode information such as: 
+Using the review data and product data, we construct two types of graphs: a user-product graph and a product-product graph. For both graphs, we use the visualize graph function to create Plotly Scatter objects for edges and nodes. \\
+The first graph is a user to product graph, which connects all the users to their corresponding purchase history. Thus, there are two types of nodes: 'user' and 'product'. This forms a bipartite graph where user nodes are only adjacent to product nodes and product nodes are only adjacent to user nodes. For the product node, we have two extra attributes compared to the user node. The product node contains a list called all\_time\_stamps, which records the time stamp of each purchase of the product. The product also has an extra list called all\_ratings, storing all the reviews made by the buyer of the product. The loading of the first graph .....\\
+
+The second graph is solely a product to product graph, showing the 'connection' between all the products. Two products are 'connected', or have an edge between them, if there are three or more users who have purchased \textbf{both} products. Graph 2 is a weighted graph, where there is a node between them.
+
+How did we transition from graph1 to graph2? \\
+ Our goal is to find how strong the connection between two given products. The weight of the connection between any given two products can be calculated between any two products when given their average rating, average time stamp, and the number of users who have purchased both products. Note that if no user purchased both of the two products, we say that there is no connection between them, and no edge is drawn between the two product vertices in graph 2. \\
+There are three parts to this.
+\begin{itemize}
+    \item For any two products, the number of users who have purchased both. We do this by extracting all the 'pairs' of products from graph1, that is, for each product, find all the other products that are purchased through the set of the same users. Each pair represents an occurrence of two products being purchased by some common user. Note that the number of duplicates of each pair is related to how many users have bought the same product. The algorithm we designed that can achieve this is to loop through the neighbour's neighbour of each graph. We will get the duplicate of all the occurrences of the pairs of the products that are bought by the same person. Each pair will be represented by a tuple. Notice that because the first graph is a bipartite graph, every product's neighbour is a user, and every product's neighbour's neighbour is another product bought by the same user. Hence, this function is finding all the pairs of products bought by the same user. Essentially we will traverse through the graph each product's neighbour's neighbour and the original product. However, notice that each pair is traversed through twice. Next, we count the number of occurrences of each pair using the counting\_pairs function. This returns a dictionary mapping the tuple with the corresponding number of occurrences in the list passed in.
+    \item For each product, the average time stamp of each purchase: the larger the time stamp value, the more recent a product is bought. Hence, we will take the all\_time\_stamp attribute in each product vertex and take the average of it using the sum() built-in function.
+    \item The average rating of each product: we will take the all\_rating attribute in each product vertex and take the average of it using the sum() built-in function.
+\end{itemize}\\
+
+
+The recommend function is designed to suggest a list of products to a user based on a recently purchased item. This process utilizes a product-to-product graph (referred to as graph 2). Upon receiving the name of the newly bought product as input, the recommend function initiates its operation by verifying the presence of this product in graph 2. If the product is found within the graph, the function proceeds to explore both its immediate neighbors and the neighbors' neighbors (termed as sub-neighbors in the function). For each of these connected products, the function calculates the weight of the connection to the newly purchased product. For sub-neighbors, this calculation is based on the average weight of the edge connecting it to its neighbor and the edge connecting the neighbor to the newly bought product. The outcome of this process is a list of potential product recommendations, each represented as a tuple containing the product name and the calculated product-to-product weight. The final step sorts the product tuples by their connection strength to the new purchase and returns the top recommendations up to a set limit.\\
+
+
+These functions are designed to visually encode information such as:
 The positions of nodes based on a spring layout, indicating the natural clustering of the graph.
 Edge widths representing the weight of relationships (potentially the strength or number of interactions).
 Node colors indicating degrees or categories, with a color bar providing a legend for this encoding.
@@ -123,7 +141,7 @@ Hoverable text over nodes and edges providing additional information, like user 
 \texttt{networkx} is a powerful library for the creation, manipulation, and study of the structure, dynamics, and functions of complex networks.
 
 \begin{itemize}
-    \item \textbf{Graph Construction}: Utilizes \texttt{nx.Graph()} to model the relationships between users and products or between products themselves. 
+    \item \textbf{Graph Construction}: Utilizes \texttt{nx.Graph()} to model the relationships between users and products or between products themselves.
     \item \textbf{Layout Algorithms}: \texttt{nx.spring\_layout} algorithm is employed to visually organize the graph nodes in a manner that reflects the network's structure.
 \end{itemize}
 
@@ -153,10 +171,10 @@ WARNING: the TA should enter a string exactly as it is written in the comments, 
 Then, the TA will see two Plotly graphs pop up in their browser after some wait, one is a user-product graph similar to exercises, another is a product-product graph which we generated based on the user-product graph. The vertices are colour-coded based on the degree of the vertices. The graph can be interacted with by hovering and seeing the names of products and user IDs. All the basic Plotly features exist, such as zooming in, which may be required to see the edges between vertices that are quite small.
 
 \section*{Changes to Project Plan}
-We changed the dataset we used to a different year, as the 2023 version has more information we can make use of, such as the timestamp of reviews. Instead of directly looking at purchase history, we decided to investigate user reviews as we can deduce purchase history from user reviews with even more information. We did not end up implementing an edge traversal limit. Instead, we sorted our recommendations by a scoring system of edge weights which displays the strength of the connection between products. In addition to our original plan, we decided to create a product-product graph that directly exemplifies the connections between the products. 
+We changed the dataset we used to a different year, as the 2023 version has more information we can make use of, such as the timestamp of reviews. Instead of directly looking at purchase history, we decided to investigate user reviews as we can deduce purchase history from user reviews with even more information. We did not end up implementing an edge traversal limit. Instead, we sorted our recommendations by a scoring system of edge weights which displays the strength of the connection between products. In addition to our original plan, we decided to create a product-product graph that directly exemplifies the connections between the products.
 
 \section*{Discussion}
-We believe that we have successfully created a recommendation system. 
+We believe that we have successfully created a recommendation system.
 
 \section*{References}
 
