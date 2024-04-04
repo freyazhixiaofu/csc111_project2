@@ -43,6 +43,5 @@ if __name__ == '__main__':
     python_ta.check_all(config={
         'max-line-length': 120,
         'extra-imports': ['load_graph2'],
-        'allowed-io': ['load_graph2'],
         'max-nested-blocks': 4
     })
