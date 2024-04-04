@@ -1,14 +1,27 @@
-"""
-i wrote this copyright stuff csc111
+"""CSC111 Winter 2024 Project2: main
+
+Overview
+===============================
+
+This Python module contains a function responsible for visualization of a Plotly graph,
+and the 'main' code responsible for computing the result of the entire program.
+
+Copyright and Usage Information
+===============================
+
+This file is provided solely for grading by instructors and TAs of CSC111.
+at the University of Toronto St. George campus. All forms of distribution
+of this code, whether as given or with any changes, are expressly prohibited.
+
+This file is Copyright (c) 2024 Ying Zhang, Zhixiao Fu, Yufei Chen, Julie Sun
 """
 
-from read_data import *
-
+import plotly.graph_objects as go
+import networkx as nx
+import read_data
 from graph_construction import load_user_product_graph
 from load_graph2 import get_all_pairs, counting_pairs, load_graph2
 from recommend_byg2 import recommend
-import plotly.graph_objects as go
-import networkx as nx
 
 
 def generate_edge_traces(g_nx: nx.Graph, pos: dict) -> list[go.Scatter]:
