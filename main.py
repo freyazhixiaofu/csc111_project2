@@ -94,5 +94,11 @@ if __name__ == "__main__":
     visualize_plotly_graph(G_product_product, 'Product-Product Graph', node_color='lightseagreen',
                            edge_color='rgba(150,150,150,0.4)', node_size=10)
 
-    # results = recommend(g2, 'Plastic Ointment Jars With Lids 1 Oz 10/pkg', 10)
-    # print(results)
+    results = recommend(g2, 'Nurbo Handmade Love Owl wings Multilayer Knit Leather Rope Chain Bracelet', 10)
+    for result in results:
+        print(result)
+    ##################################
+    # the following are test cases( the product newly bought)
+    # '16 oz, Pink - Bargz Perfume - Pink Friday By Nikki Minaj Body Oil For Women Scented Fragrance', 10)
+    # SALUX Nylon Japanese Beauty Skin Bath Wash cloth Towel Yellow'
+    # Nurbo Handmade Love Owl wings Multilayer Knit Leather Rope Chain Bracelet

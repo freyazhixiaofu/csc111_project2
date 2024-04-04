@@ -89,7 +89,7 @@ class WeightedGraph:
     def get_all_vertices(self) -> set[str]:
         """A set of all the product names in the graph"""
         return {v.name for v in self._vertices.values()}
-        
+
     def to_networkx(self, max_vertices: int = 5000) -> nx.Graph:
         """Convert this graph into a networkx Graph.
 
@@ -204,7 +204,7 @@ def load_graph2(g1: Graph, d: dict[tuple: int]) -> WeightedGraph:
     """
     g2 = WeightedGraph()
     for tup in d:
-        if d[tup] // 2 >= 1:
+        if d[tup] // 2 >= 3:
             v1 = g1.get_vertex(tup[0])
             v2 = g1.get_vertex(tup[1])
             rating1 = sum(v1.all_review) / len(v1.all_review)
