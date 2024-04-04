@@ -1,15 +1,164 @@
-%! Author = celin
-%! Date = 2024-03-24
-
-% Preamble
-\documentclass[11pt]{article}
-
-% Packages
+\documentclass[fontsize=11pt]{article}
 \usepackage{amsmath}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{verbatimbox}
 
-% Document
+\title{CSC111 Project 2: Enhancing E-Commerce Experience with a User-Review-Based Recommendation System }
+\author{Ying Zhang, Zhixiao Fu, Yufei Chen, Julie Sun}
+\date{\today}
+
 \begin{document}
+\maketitle
 
+\section*{Problem Description and Project Question}
+Problem Description:
+Online shoppers often face challenges finding products that genuinely interest them, due to the overwhelming variety available. This issue can lead to decision fatigue, impacting customer satisfaction and sales negatively. Small businesses especially require a recommendation system that they can use to improve sales (which is what we plan to create!). As data has shown, brands that use these systems have a much higher conversion rate compared to brands that do not use one. By analyzing user review data, specifically from Amazon, we aim to develop a system using a graph-based implementation that suggests products to customers based on what similar shoppers have bought, ratings of those products, and positive or negative text reviews of those products. The user reviews will be used as a purchase history, matching products with users who wrote reviews for them. We are also attempting to use the graph-based implementation to mitigate issues that popular recommendation implementations have, such as prioritizing recommendations of more popular products. We can accomplish this by looking at direct connections between the purchases shoppers have made along with the products we need to make recommendations for. This will allow some more niche products to have a higher chance of being recommended. We can begin our implementation by using the user reviews and creating a bipartite graph with connections between the user and the product. Then, we can follow through with our plan to connect a second graph. This can be done by narrowing down our recommendations by a criterion-- if the product to base recommendations on has been purchased along with another product more than a certain number of times, it can be deduced that these products would be a good recommendation for one another. We can make a separate graph to encapsulate this relationship, using these products only to create a product-product graph, and edge weights calculated with factors listed previously to represent how similar they are. A recommendation can then be made with this smaller subset of products and checking the edge weights of connected product vertices. We believe that this will indeed mitigate the focus on popular products and provide accurate recommendations based on customers' past incentives to buy products together.
+
+\vspace{\baselineskip}
+\noindent Question:
+
+\textbf{How can we leverage patterns in customers' product reviews to create a personalized product recommendation system, thereby enriching the shopping experience and increasing sales for an online store?}
+
+\section*{All Datasets}
+We used All\_Beauty.jsonl, meta\_All\_Beauty.jsonl, and meta\_Gift\_Cards.jsonl.
+These are all subsets of the Amazon Reviews 2023 data collected by the McAuley Lab, UCSD. In theory, the entire dataset can be used in our code, but we chose the smaller subsets to make the run time an acceptable length for testing. All datasets are stored in JSONL files.
+The datasets that start with meta is product data. They are in this format:
+\begin{verbatim}
+......
+{
+  "main_category": "All Beauty",
+  "title": "Lurrose 100Pcs Full Cover Fake Toenails Artificial Transparent Nail Tips Nail Art for DIY",
+  "average_rating": 3.7,
+  "rating_number": 35,
+  "features": [
+    "The false toenails are durable with perfect length. You have the option to wear them long or clip them short, easy to trim and file them to in any length and shape you like.",
+    "ABS is kind of green enviromental material, and makes the nails durable, breathable, light even no pressure on your own nails.",
+    "Fit well to your natural toenails. Non toxic, no smell, no harm to your health.",
+    "Wonderful as gift for girlfriend, family and friends.",
+    "The easiest and most efficient way to do your toenail tips for manicures or nail art designs. It's fashion, creative, a useful accessory brighten up your look, also as a gift."
+  ],
+  "description": [
+    "Description",
+    "The false toenails are durable with perfect length. You have the option to wear them long or clip them short, easy to trim and file them to in any length and shape you like. Plus, ABS is kind of green enviromental material, and makes the nails durable, breathable, light even no pressure on your own toenails. Fit well to your natural toenails. Non toxic, no smell, no harm to your health.",
+    "Feature",
+    "- Color: As Shown.- Material: ABS.- Size: 14.3 x 7.2 x 1cm.",
+    "Package Including",
+    "100 x Pieces fake toenails"
+  ],
+  "price": 6.99,
+  "images": [
+    {
+      "hi_res": "https://m.media-amazon.com/images/I/41a1Sj7Q20L._SL1005_.jpg",
+      "thumb": "https://m.media-amazon.com/images/I/31dlCd7tHSL._SS40_.jpg",
+      "large": "https://m.media-amazon.com/images/I/31dlCd7tHSL.jpg",
+      "variant": "MAIN"
+    },
+    {
+      "hi_res": "https://m.media-amazon.com/images/I/510BWq7O95L._SL1005_.jpg",
+      "thumb": "https://m.media-amazon.com/images/I/31sLajrdHOL._SS40_.jpg",
+      "large": "https://m.media-amazon.com/images/I/31sLajrdHOL.jpg",
+      "variant": "PT01"
+    },
+    ......
+  ],
+  "videos": [],
+  "bought_together": null,
+  "store": "Lurrose",
+  "categories": [],
+  "details": {
+    "Color": "As Shown",
+    "Size": "Large",
+    "Material": "Acrylonitrile Butadiene Styrene (ABS)",
+    "Brand": "Lurrose",
+    "Style": "French",
+    "Product Dimensions": "5.63 x 2.83 x 0.39 inches; 1.9 Ounces",
+    "UPC": "799768026253",
+    "Manufacturer": "Lurrose"
+  },
+  "parent_asin": "B07G9GWFSM"
+}
+......
+\end{verbatim}
+Each product can be read in as a dictionary. We made use of the main category (the general category the product belongs in), title (name of product), parent\_asin (product ID), and description values from said dictionary.
+
+\vspace{\baselineskip}
+The other datasets are user review datasets. They are in this format:
+\begin{verbatim}
+......
+{
+  "sort_timestamp": 1634275259292,
+  "rating": 3.0,
+  "helpful_votes": 0,
+  "title": "Meh",
+  "text": "These were lightweight and soft but much too small for my liking. I would have preferred two of these together to make one loc. For that reason I will not be repurchasing.",
+  "images": [
+    {
+      "small_image_url": "https://m.media-amazon.com/images/I/81FN4c0VHzL._SL256_.jpg",
+      "medium_image_url": "https://m.media-amazon.com/images/I/81FN4c0VHzL._SL800_.jpg",
+      "large_image_url": "https://m.media-amazon.com/images/I/81FN4c0VHzL._SL1600_.jpg",
+      "attachment_type": "IMAGE"
+    }
+  ],
+  "asin": "B088SZDGXG",
+  "verified_purchase": true,
+  "parent_asin": "B08BBQ29N5",
+  "user_id": "AEYORY2AVPMCPDV57CE337YU5LXA"
+}
+.....
+\end{verbatim}
+Each review can be read in as a dictionary. We made use of the rating (rating the user gave the product on a scale of 1-5), parent\_asin (product ID), user\_id, timestamp (when the review was written-- assumed to be a good estimation of when the purchase was made), verified\_purchase (to see if the review was with an actual purchase).
+
+\section*{Computational Overview}
+Using the review data and product data, we construct two types of graphs: a user-product graph and a product-product graph. For both graphs, we use the visualize graph function to create Plotly Scatter objects for edges and nodes. These functions are designed to visually encode information such as: 
+The positions of nodes based on a spring layout, indicating the natural clustering of the graph.
+Edge widths representing the weight of relationships (potentially the strength or number of interactions).
+Node colors indicating degrees or categories, with a color bar providing a legend for this encoding.
+Hoverable text over nodes and edges providing additional information, like user IDs or product titles, and relationship weights. Plotly's interactivity allows users to zoom in/out, pan, and hover over elements of the graph for more detailed information. This interactivity enhances the exploration and understanding of complex network structures, making it easier to identify patterns, such as clusters of highly related products or key users.
+
+\section*{NetworkX}
+
+\texttt{networkx} is a powerful library for the creation, manipulation, and study of the structure, dynamics, and functions of complex networks.
+
+\begin{itemize}
+    \item \textbf{Graph Construction}: Utilizes \texttt{nx.Graph()} to model the relationships between users and products or between products themselves. 
+    \item \textbf{Layout Algorithms}: \texttt{nx.spring\_layout} algorithm is employed to visually organize the graph nodes in a manner that reflects the network's structure.
+\end{itemize}
+
+\section*{Plotly}
+
+\texttt{plotly} is used for creating interactive, web-based graphs. It supports a wide range of visualizations, including network graphs through \texttt{go.Scatter} for nodes and edges.
+
+\begin{itemize}
+    \item \textbf{Interactive Visualization}: Enables users to interact with the graph, offering functionality like zooming and panning.
+    \item \textbf{Visual Encoding}: Nodes and edges are customized in terms of size, color, and width to convey additional data dimensions, such as the degree of a node or the weight of an edge.
+\end{itemize}
+
+\section*{Standard Python and Other Libraries}
+
+Standard Python features and libraries such as \texttt{json} for data parsing are crucial for initial data handling and preparation phases.
+
+\begin{itemize}
+    \item \textbf{Data Loading}: The \texttt{json} library is typically used for loading and parsing JSONL files, transforming data into Python's lists or dictionaries.
+    \item \textbf{Data Structures}: Python's built-in data structures like lists and dictionaries are extensively used for managing and organizing data.
+\end{itemize}
+
+
+
+\section*{Obtaining Datasets and Running Program}
+After running the program, the TA should expect to see a prompt to enter recommendations.
+WARNING: the TA should enter a string exactly as it is written in the comments, or else they will be re-prompted due to a typo. We have chosen a few inputs that best showcase the result of our program because the graph generated from our subset of data does not guarantee that recommendations will be made if there are not strong enough connections between products.
+Then, the TA will see two Plotly graphs pop up in their browser after some wait, one is a user-product graph similar to exercises, another is a product-product graph which we generated based on the user-product graph. The vertices are colour-coded based on the degree of the vertices. The graph can be interacted with by hovering and seeing the names of products and user IDs. All the basic Plotly features exist, such as zooming in, which may be required to see the edges between vertices that are quite small.
+
+\section*{Changes to Project Plan}
+We changed the dataset we used to a different year, as the 2023 version has more information we can make use of, such as the timestamp of reviews. Instead of directly looking at purchase history, we decided to investigate user reviews as we can deduce purchase history from user reviews with even more information. We did not end up implementing an edge traversal limit. Instead, we sorted our recommendations by a scoring system of edge weights which displays the strength of the connection between products. In addition to our original plan, we decided to create a product-product graph that directly exemplifies the connections between the products. 
+
+\section*{Discussion}
+We believe that we have successfully created a recommendation system. 
+
+\section*{References}
 
 
 \end{document}
