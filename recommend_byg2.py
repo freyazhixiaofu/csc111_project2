@@ -1,5 +1,22 @@
-"""we already have the graph with product to product vertices. now a user just bought a product.
-we need to recommend <limit> number of product to them"""
+"""CSC111 Winter 2024 Project2: recommend
+
+Overview
+===============================
+
+This Python module imports the graph with product to product vertices. Suppose a user just bought a new product.
+The function reccomend returns <limit> number of products that are closely related to the newly
+bought product.
+
+Copyright and Usage Information
+===============================
+
+This file is provided solely for grading by instructors and TAs of CSC111.
+at the University of Toronto St. George campus. All forms of distribution
+of this code, whether as given or with any changes, are expressly prohibited.
+
+This file is Copyright (c) 2024 Ying Zhang, Zhixiao Fu, Yufei Chen, Julie Sun
+"""
+
 from load_graph2 import WeightedGraph
 
 # updated 4.1.1.11

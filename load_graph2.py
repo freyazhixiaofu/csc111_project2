@@ -1,6 +1,21 @@
-"""This python module contians the necessary classes and functions that are required to
+"""CSC111 Winter 2024 Project2: load_graph2
+
+Overview
+===============================
+
+This python module contians the necessary classes and functions that are required to
 loads our second graph, a product to product graph where the connection between the products
-is being displayed."""
+is being displayed.
+
+Copyright and Usage Information
+===============================
+
+This file is provided solely for grading by instructors and TAs of CSC111.
+at the University of Toronto St. George campus. All forms of distribution
+of this code, whether as given or with any changes, are expressly prohibited.
+
+This file is Copyright (c) 2024 Ying Zhang, Zhixiao Fu, Yufei Chen, Julie Sun
+"""
 
 from __future__ import annotations
 from typing import Any, Union
@@ -125,7 +140,7 @@ def counting_pairs(lst: list) -> dict[tuple: int]:
     Returns a dictionary mapping the tuple with the corresponding number of occurrences in the lst passed in.
     Note that
 
-    lst = [(1, 4), (2, 6), (3, 4), (10, 22), (1, 4), (1, 4), (3, 4), (3, 4), (10, 22), (10, 22), (3, 4)]
+    >>> lst = [(1, 4), (2, 6), (3, 4), (10, 22), (1, 4), (1, 4), (3, 4), (3, 4), (10, 22), (10, 22), (3, 4)]
     >>> d = counting_pairs(lst)
     >>> d
     {(1, 4): 3, (2, 6): 1, (3, 4): 4, (10, 22): 3}
@@ -147,7 +162,6 @@ def get_all_pairs(g: Graph) -> list[tuple]:
 
     A postcondition is that all the tuples in the list must be sorted in alphabetical order.
 
-    >>>
     """
     lst = []
     products = g.get_all_vertices('product')
@@ -175,7 +189,7 @@ def calculate_weight(rating1: float, rating2: float, time1: float, time2: float,
 
     A formula will be used to compute the weight.
     >>> calculate_weight(3, 4, 8232141241332, 8231231434122, 4)
-    6
+    3385
     """
     time_diff = int(pow(10, -10) * (time1 - time2))
     if time_diff == 0:
