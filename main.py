@@ -92,10 +92,7 @@ if __name__ == "__main__":
         if product["title"] == the_product:
             product_category = product["main_category"]
     while product_category == "":
-        product = input("What product would you like a recommendation for?")
-        product_data1 = load_clean_product_data("meta_All_Beauty.jsonl")
-        product_data2 = load_clean_product_data("meta_Gift_Cards.jsonl")
-        product_data = product_data1 + product_data2
+        the_product = input("What product would you like a recommendation for?")
         for product in product_data:
             if product["title"] == the_product:
                 product_category = product["main_category"]
