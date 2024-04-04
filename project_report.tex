@@ -14,7 +14,7 @@
 \maketitle
 
 \section*{Problem Description and Project Question}
-Problem Description:
+Problem Description: \\
 Online shoppers often face challenges finding products that genuinely interest them, due to the overwhelming variety available. This issue can lead to decision fatigue, impacting customer satisfaction and sales negatively. Small businesses especially require a recommendation system that they can use to improve sales (which is what we plan to create!). As data has shown, brands that use these systems have a much higher conversion rate compared to brands that do not use one. By analyzing user review data, specifically from Amazon, we aim to develop a system using a graph-based implementation that suggests products to customers based on what similar shoppers have bought, ratings of those products, and positive or negative text reviews of those products. The user reviews will be used as a purchase history, matching products with users who wrote reviews for them. We are also attempting to use the graph-based implementation to mitigate issues that popular recommendation implementations have, such as prioritizing recommendations of more popular products. We can accomplish this by looking at direct connections between the purchases shoppers have made along with the products we need to make recommendations for. This will allow some more niche products to have a higher chance of being recommended. We can begin our implementation by using the user reviews and creating a bipartite graph with connections between the user and the product. Then, we can follow through with our plan to connect a second graph. This can be done by narrowing down our recommendations by a criterion-- if the product to base recommendations on has been purchased along with another product more than a certain number of times, it can be deduced that these products would be a good recommendation for one another. We can make a separate graph to encapsulate this relationship, using these products only to create a product-product graph, and edge weights calculated with factors listed previously to represent how similar they are. A recommendation can then be made with this smaller subset of products and checking the edge weights of connected product vertices. We believe that this will indeed mitigate the focus on popular products and provide accurate recommendations based on customers' past incentives to buy products together.
 
 \vspace{\baselineskip}
@@ -24,7 +24,7 @@ Online shoppers often face challenges finding products that genuinely interest t
 
 \section*{All Datasets}
 We used All\_Beauty.jsonl, meta\_All\_Beauty.jsonl, and meta\_Gift\_Cards.jsonl.
-These are all subsets of the Amazon Reviews 2023 data collected by the McAuley Lab, UCSD. In theory, the entire dataset can be used in our code, but we chose the smaller subsets to make the run time an acceptable length for testing. All datasets are stored in JSONL files.
+These are all subsets of the Amazon Reviews 2023 data collected by the McAuley Lab, UCSD. In theory, we wrote our code so that the entire dataset can be used in our code, but we chose the smaller subsets to make the run time an acceptable length for testing. All datasets are stored in JSONL files.
 The datasets that start with meta is product data. They are in this format:
 \begin{verbatim}
 ......
@@ -93,7 +93,7 @@ The other datasets are user review datasets. They are in this format:
   "rating": 3.0,
   "helpful_votes": 0,
   "title": "Meh",
-  "text": "These were lightweight and soft but much too small for my liking. I would have preferred two of these together to make one loc. For that reason I will not be repurchasing.",
+  "text": "The review",
   "images": [
     {
       "small_image_url": "https://m.media-amazon.com/images/I/81FN4c0VHzL._SL256_.jpg",
@@ -124,7 +124,7 @@ There are three parts to this.
     \item For any two products, the number of users who have purchased both. We do this by extracting all the 'pairs' of products from graph1, that is, for each product, find all the other products that are purchased through the set of the same users. Each pair represents an occurrence of two products being purchased by some common user. Note that the number of duplicates of each pair is related to how many users have bought the same product. The algorithm we designed that can achieve this is to loop through the neighbour's neighbour of each graph. We will get the duplicate of all the occurrences of the pairs of the products that are bought by the same person. Each pair will be represented by a tuple. Notice that because the first graph is a bipartite graph, every product's neighbour is a user, and every product's neighbour's neighbour is another product bought by the same user. Hence, this function is finding all the pairs of products bought by the same user. Essentially we will traverse through the graph each product's neighbour's neighbour and the original product. However, notice that each pair is traversed through twice. Next, we count the number of occurrences of each pair using the counting\_pairs function. This returns a dictionary mapping the tuple with the corresponding number of occurrences in the list passed in.
     \item For each product, the average time stamp of each purchase: the larger the time stamp value, the more recent a product is bought. Hence, we will take the all\_time\_stamp attribute in each product vertex and take the average of it using the sum() built-in function.
     \item The average rating of each product: we will take the all\_rating attribute in each product vertex and take the average of it using the sum() built-in function.
-\end{itemize}\\
+\end{itemize}
 
 
 The recommend function is designed to suggest a list of products to a user based on a recently purchased item. This process utilizes a product-to-product graph (referred to as graph 2). Upon receiving the name of the newly bought product as input, the recommend function initiates its operation by verifying the presence of this product in graph 2. If the product is found within the graph, the function proceeds to explore both its immediate neighbors and the neighbors' neighbors (termed as sub-neighbors in the function). For each of these connected products, the function calculates the weight of the connection to the newly purchased product. For sub-neighbors, this calculation is based on the average weight of the edge connecting it to its neighbor and the edge connecting the neighbor to the newly bought product. The outcome of this process is a list of potential product recommendations, each represented as a tuple containing the product name and the calculated product-to-product weight. The final step sorts the product tuples by their connection strength to the new purchase and returns the top recommendations up to a set limit.\\
@@ -132,7 +132,7 @@ The recommend function is designed to suggest a list of products to a user based
 
 These functions are designed to visually encode information such as:
 The positions of nodes based on a spring layout, indicating the natural clustering of the graph.
-Edge widths representing the weight of relationships (potentially the strength or number of interactions).
+Edge labels represent the weight of relationships (the strength).
 Node colors indicating degrees or categories, with a color bar providing a legend for this encoding.
 Hoverable text over nodes and edges providing additional information, like user IDs or product titles, and relationship weights. Plotly's interactivity allows users to zoom in/out, pan, and hover over elements of the graph for more detailed information. This interactivity enhances the exploration and understanding of complex network structures, making it easier to identify patterns, such as clusters of highly related products or key users.
 
@@ -167,16 +167,51 @@ Standard Python features and libraries such as \texttt{json} for data parsing ar
 
 \section*{Obtaining Datasets and Running Program}
 After running the program, the TA should expect to see a prompt to enter recommendations.
-WARNING: the TA should enter a string exactly as it is written in the comments, or else they will be re-prompted due to a typo. We have chosen a few inputs that best showcase the result of our program because the graph generated from our subset of data does not guarantee that recommendations will be made if there are not strong enough connections between products.
-Then, the TA will see two Plotly graphs pop up in their browser after some wait, one is a user-product graph similar to exercises, another is a product-product graph which we generated based on the user-product graph. The vertices are colour-coded based on the degree of the vertices. The graph can be interacted with by hovering and seeing the names of products and user IDs. All the basic Plotly features exist, such as zooming in, which may be required to see the edges between vertices that are quite small.
+WARNING: the TA should enter a string exactly as it is written in the comments at the bottom of the main.py file, or else they will be re-prompted due to a typo. I have also listed them here: \\
+16 oz, Pink - Bargz Perfume - Pink Friday By Nikki Minaj Body Oil For Women Scented Fragrance \\
+SALUX Nylon Japanese Beauty Skin Bath Wash cloth Towel Yellow \\
+Nurbo Handmade Love Owl wings Multilayer Knit Leather Rope Chain Bracelet \\
+We have chosen a few inputs that best showcase the result of our program because the graph generated from our subset of data does not guarantee that recommendations will be made if there are not strong enough connections between products.
+Then, the TA will see two Plotly graphs pop up in their browser after some wait, one is a user-product graph similar to exercises, another is a product-product graph which we generated based on the user-product graph. The vertices are colour-coded based on the degree of the vertices. The graph can be interacted with by hovering and seeing the names of products, weights, and user IDs. All the basic Plotly features exist, such as zooming in, which may be required to see the edges between vertices that are quite small.
 
 \section*{Changes to Project Plan}
 We changed the dataset we used to a different year, as the 2023 version has more information we can make use of, such as the timestamp of reviews. Instead of directly looking at purchase history, we decided to investigate user reviews as we can deduce purchase history from user reviews with even more information. We did not end up implementing an edge traversal limit. Instead, we sorted our recommendations by a scoring system of edge weights which displays the strength of the connection between products. In addition to our original plan, we decided to create a product-product graph that directly exemplifies the connections between the products.
 
 \section*{Discussion}
-We believe that we have successfully created a recommendation system.
+We believe that our recommendation system yielded promising results that achieved our goal. We successfully constructed two types of graphs: a user-product graph and a product-product graph. The user-product graph represented the relationships between users and their purchase history using user reviews, forming a bipartite graph where users were connected to products they had bought. Meanwhile, the product-product graph showcased connections between products based on their co-purchase patterns. The key features of our program, which were the generation of the product-product graph, and the final recommended products met our original goal. By calculating the strength of connections between products, the recommendation function generated a list of potential recommendations, prioritizing products with stronger connections to the newly purchased item. This product-product graph effectively showcases the connections between the products, therefore allowing small businesses to even strategize marketing. The recommendations we created work in both the business and the consumers' favours-- it displays products that should also be of the consumers' interest to make the E-commerce experience more satisfactory, and generates more profit for businesses when consumers are shown products to their liking. \\
+
+Although our final product reached our goal, there were certain limitations to our program as well as struggles. With our datasets, even when we were taking a subset of the elements available, there were often elements that were simply empty and that would mess up our program. We removed them when we read in the data from the JSONL file. As well, many other helpful elements were present in the dataset such as item prices. We were originally going to consider these for even more personalized recommendations, but the dataset provided gave us \"null\" or just empty lists, so we had to scrap those because of how few products actually included these elements. Because we are creating two graphs, the run time is quite large. Thus, we only included one category. Though the program will still work when other categories are included, our recommendations will be based on the category the product is in. It was also a challenge to recommend a large number of products because of our strict criteria for creating the product-product graph. We tried an implementation where we did not apply the criteria of three or more co-purchases and just utilized the attributes of the products like rating and timestamp. In the end, we chose to stick with the strict criteria because we believe these recommendations are more accurate. After all, it is based on repeated user purchase patterns, but it would simultaneously require a way larger dataset to generate more recommendations and make them more diverse. Exploring the Plotly library was also a challenge, as we decided to stray from the NetworkX approach used in exercises. There was a lot more research and debugging as we needed to figure out how to work with Plotly. We believe the final graphs included all the information needed such as user ID, product name, and weights, but it was also aesthetically pleasing because of the colours we chose to show the degrees, which was the most useful for the product-product graph to display the products with the most neighbours, but not as much for the user-product graph. Possible steps of exploration to further enhance our recommendation system can be recommendations from different categories and working with larger datasets. \\
+
+In conclusion, our project successfully met our original goal. Recommendations were created from our user-product and product-product graph algorithms and we explored new ways to represent connections through a product-product graph. Although there were certain limitations, the criteria we set for our recommendation enhanced the accuracy of our limited recommendations, which were then presented visually through a Plotly graph. 
 
 \section*{References}
+
+\begin{center}
+Works Cited
+\end{center}
+
+\noindent "Introduction." Amazon Reviews'23, amazon-reviews-2023.github.io/main.html.
+\vspace{\baselineskip}
+
+\noindent Natasha. "Displaying Edge Labels of Networkx Graph in Plotly." Plotly Community Forum, 
+
+
+25 Oct. 2020, community.plotly.com/t/displaying-edge-labels-of-networkx-graph-in-
+
+
+plotly/39113/2.
+\vspace{\baselineskip}
+
+
+\noindent Plotly Community Forum, community.plotly.com/.
+\vspace{\baselineskip}
+\noindent "Plotly Tutorial." GeeksforGeeks, 26 Dec. 2023, www.geeksforgeeks.org/python-plotly-tutorial/.
+
+\vspace{\baselineskip}
+\noindent "Plotly/plotly.py: The Interactive Graphing Library for Python This Project Now Includes Plotly
+
+
+Express!" GitHub, github.com/plotly/plotly.py.
 
 
 \end{document}
