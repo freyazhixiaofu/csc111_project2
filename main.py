@@ -4,7 +4,7 @@ Overview
 ===============================
 
 This Python module contains a function responsible for visualization of a Plotly graph,
-and the 'main' code responsible for computing the result of the entire program.
+and the 'main' code responsible for computing the result of the entire project.
 
 Copyright and Usage Information
 ===============================
