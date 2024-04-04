@@ -20,6 +20,7 @@ class _WeightedVertex:  # NOT CHANGED YET DOCSTRING
 
     name: Any
     neighbours: dict[_WeightedVertex, Union[int, float]]
+    kind: str
 
     def __init__(self, name: Any) -> None:
         """Initialize a new vertex with the name passed in.
@@ -27,6 +28,7 @@ class _WeightedVertex:  # NOT CHANGED YET DOCSTRING
         """
         self.name = name
         self.neighbours = {}
+        self.kind = 'product'
 
 
 class WeightedGraph:
@@ -100,11 +102,11 @@ class WeightedGraph:
         """
         graph_nx = nx.Graph()
         for v in self._vertices.values():
-            graph_nx.add_node(v.name, kind=v.name)
+            graph_nx.add_node(v.name, kind='product')
 
             for u in v.neighbours.keys():
                 if graph_nx.number_of_nodes() < max_vertices:
-                    graph_nx.add_node(u.name, kind=u.name)
+                    graph_nx.add_node(u.name, kind='product')
 
                 if u.name in graph_nx.nodes:
                     graph_nx.add_edge(v.name, u.name, weight=v.neighbours[u])
@@ -155,7 +157,7 @@ def get_all_pairs(g: Graph) -> list[tuple]:
     return lst
 
 
-def get_double_nb (v: str, g: Graph) -> list[str]:
+def get_double_nb(v: str, g: Graph) -> list[str]:
     """Get neighbour's neighbours that are not itself"""
     s = []
     for nb in g.get_vertex(v).neighbours:
@@ -163,6 +165,7 @@ def get_double_nb (v: str, g: Graph) -> list[str]:
             if nb2.item != v:
                 s.append(nb2.item)
     return s
+
 
 def calculate_weight(rating1: float, rating2: float, time1: float, time2: float, occurrences: int) -> float:
     """Calculate how strong the connection is between any two products when given their average rating, average
@@ -219,3 +222,4 @@ def load_graph2(g1: Graph, d: dict[tuple: int]) -> WeightedGraph:
             # if g2.adjacent(tup[0], tup[1]):
             #     print(f'...{g2.get_all_vertices()}...lol')
     return g2
+
