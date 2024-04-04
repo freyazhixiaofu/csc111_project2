@@ -96,6 +96,9 @@ if __name__ == "__main__":
         product_data1 = load_clean_product_data("meta_All_Beauty.jsonl")
         product_data2 = load_clean_product_data("meta_Gift_Cards.jsonl")
         product_data = product_data1 + product_data2
+        for product in product_data:
+            if product["title"] == the_product:
+                product_category = product["main_category"]
 
     review_data = load_clean_review_data(f"{product_category.replace(" ", "_")}.jsonl")
     product_datas = {"All Beauty": product_data1, "Gift Cards": product_data2}
