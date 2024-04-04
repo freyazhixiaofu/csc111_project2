@@ -119,8 +119,8 @@ def visualize_graph(g_nx: nx.Graph, title: str) -> None:
 
 if __name__ == "__main__":
     the_product = input("What product would you like a recommendation for?")
-    product_data1 = load_clean_product_data("meta_All_Beauty.jsonl")
-    product_data2 = load_clean_product_data("meta_Gift_Cards.jsonl")
+    product_data1 = read_data.load_clean_product_data("meta_All_Beauty.jsonl")
+    product_data2 = read_data.load_clean_product_data("meta_Gift_Cards.jsonl")
     product_data = product_data1 + product_data2
 
     product_category = ""
@@ -133,7 +133,7 @@ if __name__ == "__main__":
             if product["title"] == the_product:
                 product_category = product["main_category"]
 
-    review_data = load_clean_review_data(f"{product_category.replace(" ", "_")}.jsonl")
+    review_data = read_data.load_clean_review_data(f"{product_category.replace(" ", "_")}.jsonl")
     product_datas = {"All Beauty": product_data1, "Gift Cards": product_data2}
 
     g1 = load_user_product_graph(review_data, product_datas[product_category])
