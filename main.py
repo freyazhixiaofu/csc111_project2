@@ -40,11 +40,19 @@ def generate_edge_traces(g_nx: nx.Graph, pos: dict) -> list[go.Scatter]:
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
         weight = edge[2].get('weight', 1)
+        mid_x = (x0 + x1) / 2
+        mid_y = (y0 + y1) / 2
         edge_trace.append(go.Scatter(x=[x0, x1, None], y=[y0, y1, None],
                                      mode='lines',
                                      line={"width": 0.5, "color": "black"},
-                                     hoverinfo='text',
-                                     text=[f'Weight: {weight}']))
+                                     hoverinfo='none'))
+        if weight != 1:
+            edge_trace.append(go.Scatter(x=[mid_x], y=[mid_y],
+                                         mode='text',
+                                         text=[],
+                                         hoverinfo='text',
+                                         hovertext=[f'Weight: {weight}'],
+                                         textposition='middle center'))
     return edge_trace
 
 
