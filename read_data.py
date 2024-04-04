@@ -2,8 +2,6 @@
 i wrote this copyright and stuff csc111
 """
 import json
-# not currently used, can print data, copied from ucsd 2023 website
-# pprint = lambda x: print(json.dumps(x, indent=2)) if isinstance(x, dict) else display(x)
 
 
 def load_clean_review_data(review_data: str) -> list[dict[str, str]]:
@@ -12,15 +10,14 @@ def load_clean_review_data(review_data: str) -> list[dict[str, str]]:
     """
     with open(review_data, 'r') as file:
         data = []
-        keys_to_read = ["rating", "asin", "parent_asin", "user_id", "timestamp", "verified_purchase"]
+        keys_to_read = ["rating", "parent_asin", "user_id", "timestamp", "verified_purchase"]
         for line in file:
             line_dict = json.loads(line.strip())
-            # pprint(json.loads(line.strip()))   <-- prints data nicely
-            # removes unverified purchases
             selected_data = {key: line_dict[key] for key in keys_to_read}
-            if line_dict["verified_purchase"]:
+            conditions1 = line_dict["rating"] != "" and line_dict["parent_asin"] != ""
+            conditions2 = line_dict["user_id"] != "" and line_dict["timestamp"] != ""
+            if line_dict["verified_purchase"] and conditions1 and conditions2:
                 data.append(selected_data)
-                print(selected_data)
     return data
 
 
@@ -30,9 +27,11 @@ def load_clean_product_data(product_data: str) -> list[dict[str, str]]:
     """
     with open(product_data, 'r') as file:
         data = []
-        keys_to_read = ["main_category", "title", "parent_asin", "description"]  # can add more if needed
+        keys_to_read = ["main_category", "title", "parent_asin", "description"]
         for line in file:
             line_dict = json.loads(line.strip())
             selected_data = {key: line_dict[key] for key in keys_to_read}
-            data.append(selected_data)
+            conditions = line_dict["parent_asin"] != "" and line_dict["description"] != ""
+            if line_dict["main_category"] != "" and line_dict["title"] != "" and conditions:
+                data.append(selected_data)
     return data
