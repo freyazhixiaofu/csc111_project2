@@ -11,68 +11,97 @@ import plotly.graph_objects as go
 import networkx as nx
 
 
-def visualize_weighted_graph(G_nx: nx.Graph, title: str):
+def generate_edge_traces(g_nx: nx.Graph, pos: dict) -> list[go.Scatter]:
     """
-    Visualize a weighted graph using Plotly, specifically tailored for the
-    network graph built from the WeightedGraph class.
-    """
-    pos = nx.spring_layout(G_nx, seed=42)  # Position nodes using the spring layout
+    Generates edge traces for a networkx graph visualization.
 
+    Parameters:
+    - g_nx (nx.Graph): The networkx graph.
+    - pos (dict): A dictionary specifying the positions of nodes in the graph.
+
+    Returns:
+    - List[go.Scatter]: A list of plotly Scatter objects representing the graph edges.
+    """
     edge_trace = []
-    for edge in G_nx.edges(data=True):
+    for edge in g_nx.edges(data=True):
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
-        weight = edge[2]['weight'] if 'weight' in edge[2] else 1
+        weight = edge[2].get('weight', 1)
         edge_trace.append(go.Scatter(x=[x0, x1, None], y=[y0, y1, None],
                                      mode='lines',
-                                     line=dict(width=0.5, color='black'),
-                                     textposition='top center',
-                                     hovertemplate='%{text}',
+                                     line={"width": 0.5, "color": "black"},
                                      hoverinfo='text',
                                      text=[f'Weight: {weight}']))
+    return edge_trace
 
-    # Prepare node traces
-    node_x = []
-    node_y = []
-    for node in G_nx.nodes():
+
+def generate_node_traces(g_nx: nx.Graph, pos: dict) -> go.Scatter:
+    """
+    Generates node traces for a networkx graph visualization, including a color bar
+    to represent node degree.
+
+    Parameters:
+    - g_nx (nx.Graph): The networkx graph.
+    - pos (dict): A dictionary specifying the positions of nodes in the graph.
+
+    Returns:
+    - go.Scatter: A plotly Scatter object representing the graph nodes, with a color bar
+                  indicating the degree of each node.
+    """
+    node_x, node_y, node_color = [], [], []
+    for node in g_nx.nodes():
         x, y = pos[node]
         node_x.append(x)
         node_y.append(y)
+        # Use node degree as a proxy for color intensity
+        node_color.append(g_nx.degree[node])
 
     node_trace = go.Scatter(x=node_x, y=node_y,
                             mode='markers',
                             hoverinfo='text',
-                            marker=dict(showscale=True,
-                                        colorscale='Viridis',
-                                        size=10,
-                                        color=list(dict(G_nx.degree).values()),
-                                        colorbar=dict(title='Degree'),
-                                        line_width=0.5))
+                            marker={"size": 10,
+                                    "color": node_color,
+                                    "colorscale": "Viridis",
+                                    "showscale": True,
+                                    "colorbar": {"title": "Degree"},
+                                    "line": {"width": 0.5}})
 
     node_text = []
-    for node in G_nx.nodes(data=True):
+    for node in g_nx.nodes(data=True):
         if node[1].get('kind') != 'product':
-            label = 'User ID: {}'.format(node[0])
+            label = f'User ID: {node[0]}'
         else:
-            label = 'Product: {}'.format(node[0])
+            label = f'Product : {node[0]}'
         node_text.append(label)
     node_trace.text = node_text
+
+    return node_trace
+
+
+def visualize_weighted_graph(g_nx: nx.Graph, title: str) -> None:
+    """
+    Visualizes a weighted graph using Plotly, specifically tailored for the
+    network graph built from the networkx Graph class. This function utilizes
+    helper functions to generate edge and node traces for the visualization.
+
+    Parameters:
+    - g_nx (nx.Graph): The networkx graph to visualize.
+    - title (str): The title of the graph visualization.
+    """
+    pos = nx.spring_layout(g_nx, seed=42)
+
+    edge_trace = generate_edge_traces(g_nx, pos)
+    node_trace = generate_node_traces(g_nx, pos)
 
     fig = go.Figure(data=edge_trace + [node_trace],
                     layout=go.Layout(title=title,
                                      showlegend=False,
                                      hovermode='closest',
-                                     margin=dict(b=0, l=0, r=0, t=40),
-                                     xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                                     yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
+                                     margin={"b": 0, "l": 0, "r": 0, "t": 40},
+                                     xaxis={"showgrid": False, "zeroline": False, "showticklabels": False},
+                                     yaxis={"showgrid": False, "zeroline": False, "showticklabels": False}))
 
     fig.show()
-
-
-def main():
-    """
-    main
-    """
 
 
 if __name__ == "__main__":
