@@ -143,6 +143,6 @@ if __name__ == "__main__":
         print(result)
     ##################################
     # the following are test cases( the product newly bought)
-    # '16 oz, Pink - Bargz Perfume - Pink Friday By Nikki Minaj Body Oil For Women Scented Fragrance', 10)
+    # 16 oz, Pink - Bargz Perfume - Pink Friday By Nikki Minaj Body Oil For Women Scented Fragrance
     # SALUX Nylon Japanese Beauty Skin Bath Wash cloth Towel Yellow
     # Nurbo Handmade Love Owl wings Multilayer Knit Leather Rope Chain Bracelet
