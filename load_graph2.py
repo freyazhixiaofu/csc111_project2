@@ -39,6 +39,7 @@ class _WeightedVertex:
 
     name: Any
     neighbours: dict[_WeightedVertex, Union[int, float]]
+    kind: str
 
     def __init__(self, name: Any) -> None:
         """Initialize a new vertex with the name passed in.
@@ -46,6 +47,7 @@ class _WeightedVertex:
         """
         self.name = name
         self.neighbours = {}
+        self.kind = 'product'
 
 
 class WeightedGraph:
@@ -119,11 +121,11 @@ class WeightedGraph:
         """
         graph_nx = nx.Graph()
         for v in self._vertices.values():
-            graph_nx.add_node(v.name, kind=v.name)
+            graph_nx.add_node(v.name, kind='product')
 
             for u in v.neighbours.keys():
                 if graph_nx.number_of_nodes() < max_vertices:
-                    graph_nx.add_node(u.name, kind=u.name)
+                    graph_nx.add_node(u.name, kind="product")
 
                 if u.name in graph_nx.nodes:
                     graph_nx.add_edge(v.name, u.name, weight=v.neighbours[u])
